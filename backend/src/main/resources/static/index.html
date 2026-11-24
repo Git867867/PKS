@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Бронирование авиабилетов</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<main class="wrap">
+    <header>
+        <h1>Бронирование авиабилетов</h1>
+        <p id="who" class="muted"></p>
+    </header>
+
+    <section id="login-panel" class="card">
+        <h2>Вход</h2>
+        <label>Email <input id="login-email" type="email" value="admin@airline.local"></label>
+        <label>Пароль <input id="login-password" type="password"></label>
+        <button id="login-button" type="button">Войти</button>
+    </section>
+
+    <section id="password-panel" class="card hidden">
+        <h2>Смена временного пароля</h2>
+        <p>После первого входа пароль нужно заменить. Пока он не заменен, остальные запросы сервер не выполнит.</p>
+        <label>Текущий пароль <input id="old-password" type="password"></label>
+        <label>Новый пароль <input id="new-password" type="password"></label>
+        <button id="password-button" type="button">Сохранить пароль</button>
+    </section>
+
+    <section id="app" class="hidden">
+        <nav>
+            <button type="button" data-tab="bookings">Бронирования</button>
+            <button type="button" data-tab="passengers">Пассажиры</button>
+            <button type="button" data-tab="analytics">Аналитика</button>
+            <button type="button" class="admin-only" data-tab="users">Пользователи</button>
+            <button type="button" class="admin-only" data-tab="audit">Аудит</button>
+            <button id="logout-button" type="button">Выйти</button>
+        </nav>
+
+        <section id="tab-bookings" class="card">
+            <h2>Бронирования</h2>
+            <div class="filters">
+                <input id="q" placeholder="Поиск: рейс, код, город, пассажир">
+                <select id="status"><option value="">Статус</option><option>CREATED</option><option>CONFIRMED</option><option>COMPLETED</option><option>CANCELLED</option></select>
+                <select id="priority"><option value="">Приоритет</option><option value="LOW">Низкий</option><option value="MEDIUM">Средний</option><option value="HIGH">Высокий</option></select>
+                <select id="refundable"><option value="">Возврат</option><option value="true">Возвратный</option><option value="false">Невозвратный</option></select>
+                <select id="view"><option value="active">Активные</option><option value="archived">Архив</option><option value="all">Все</option></select>
+                <input id="tag" placeholder="Тег">
+                <select id="price-op"><option value="">Цена</option><option>GT</option><option>GTE</option><option>LT</option><option>LTE</option><option>EQ</option></select>
+                <input id="price" type="number" placeholder="Сумма">
+                <select id="sort"><option value="departureDate">По дате</option><option value="price">По цене</option><option value="status">По статусу</option><option value="createdAt">По созданию</option></select>
+                <select id="direction"><option value="asc">По возрастанию</option><option value="desc">По убыванию</option></select>
+                <button id="search-button" type="button">Найти</button>
+            </div>
+            <div class="row editor-only">
+                <button id="new-booking" type="button">Новое</button>
+                <button id="archive-one" type="button">В архив</button>
+                <button id="restore-one" type="button">Восстановить</button>
+                <button id="bulk-status" type="button">Сменить статус выбранным</button>
+                <button id="bulk-tag" type="button">Добавить тег</button>
+                <button id="bulk-untag" type="button">Убрать тег</button>
+                <button id="export-button" type="button">Экспорт CSV</button>
+                <button class="admin-only" id="delete-one" type="button">Удалить навсегда</button>
+            </div>
+            <table id="booking-table">
+                <thead><tr><th></th><th>Код</th><th>Пассажир</th><th>Рейс</th><th>Маршрут</th><th>Вылет</th><th>Цена</th><th>Статус</th><th>Приоритет</th><th>Теги</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <div class="row">
+                <button id="prev-page" type="button">Назад</button>
+                <span id="page-label"></span>
+                <button id="next-page" type="button">Дальше</button>
+            </div>
+            <form id="booking-form" class="hidden editor-only">
+                <h3 id="form-title">Бронирование</h3>
+                <label>Пассажир <select id="form-passenger" required></select></label>
+                <label>Рейс <input id="form-flight" required placeholder="SU-1234"></label>
+                <label>Откуда <input id="form-from" required></label>
+                <label>Куда <input id="form-to" required></label>
+                <label>Вылет <input id="form-date" type="datetime-local" required></label>
+                <label>Цена <input id="form-price" type="number" min="0.01" step="0.01" required></label>
+                <label class="check"><input id="form-refundable" type="checkbox"> Возвратный билет</label>
+                <label>Теги через запятую <input id="form-tags" placeholder="vip, срочный"></label>
+                <label id="status-row" class="hidden">Статус
+                    <select id="form-status"><option>CREATED</option><option>CONFIRMED</option><option>COMPLETED</option><option>CANCELLED</option></select>
+                </label>
+                <button type="submit">Сохранить</button>
+            </form>
+            <div id="notes" class="hidden">
+                <h3>Заметки</h3>
+                <ul id="note-list"></ul>
+                <form id="note-form" class="editor-only">
+                    <input id="note-text" placeholder="Текст заметки" required>
+                    <label class="check"><input id="note-pinned" type="checkbox"> Закрепить</label>
+                    <button type="submit">Добавить</button>
+                </form>
+            </div>
+            <div class="editor-only">
+                <h3>Импорт CSV</h3>
+                <input id="csv-file" type="file" accept=".csv,text/csv">
+                <select id="csv-mode"><option value="CREATE_ONLY">Только новые</option><option value="UPSERT">Обновлять по коду</option></select>
+                <button id="preview-button" type="button">Проверить</button>
+                <button id="apply-button" type="button">Применить</button>
+                <pre id="import-result"></pre>
+            </div>
+        </section>
+
+        <section id="tab-passengers" class="card hidden">
+            <h2>Пассажиры</h2>
+            <table id="passenger-table"><thead><tr><th>ФИО</th><th>Email</th><th>Телефон</th><th>Паспорт</th><th>Активен</th><th></th></tr></thead><tbody></tbody></table>
+            <form id="passenger-form" class="admin-only">
+                <h3>Новый пассажир</h3>
+                <label>Имя <input id="p-first" required></label>
+                <label>Фамилия <input id="p-last" required></label>
+                <label>Email <input id="p-email" type="email" required></label>
+                <label>Телефон <input id="p-phone" placeholder="+7-900-111-2233" required></label>
+                <label>Паспорт <input id="p-passport" placeholder="4510 123456" required></label>
+                <button type="submit">Создать</button>
+            </form>
+        </section>
+
+        <section id="tab-analytics" class="card hidden">
+            <h2>Аналитика</h2>
+            <div id="analytics"></div>
+        </section>
+
+        <section id="tab-users" class="card hidden">
+            <h2>Пользователи</h2>
+            <table id="user-table"><thead><tr><th>Email</th><th>Имя</th><th>Роли</th><th>Активен</th><th></th></tr></thead><tbody></tbody></table>
+            <form id="user-form">
+                <h3>Новый пользователь</h3>
+                <label>Email <input id="u-email" type="email" required></label>
+                <label>Имя <input id="u-name" required></label>
+                <label class="check"><input name="role" type="checkbox" value="VIEWER"> Просмотр</label>
+                <label class="check"><input name="role" type="checkbox" value="EDITOR"> Редактирование</label>
+                <label class="check"><input name="role" type="checkbox" value="ADMIN"> Администрирование</label>
+                <button type="submit">Создать и показать временный пароль</button>
+            </form>
+        </section>
+
+        <section id="tab-audit" class="card hidden">
+            <h2>Журнал аудита</h2>
+            <div class="row">
+                <input id="audit-q" placeholder="Событие, описание или email">
+                <button id="audit-search" type="button">Найти</button>
+            </div>
+            <table id="audit-table"><thead><tr><th>Время</th><th>Событие</th><th>Кто</th><th>Описание</th><th>Correlation</th></tr></thead><tbody></tbody></table>
+        </section>
+    </section>
+    <p id="message" class="message"></p>
+</main>
+<script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+bookingCode;flightNumber;passengerEmail;departureCity;arrivalCity;departureDate;price;status;refundable;tags
+BK-000099;SU-7777;ivan.petrov@mail.ru;Москва;Казань;2026-12-20 10:00;8000.00;CREATED;true;группа

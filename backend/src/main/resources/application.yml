@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: airline-booking
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:56080/airline_booking}
+    username: ${SPRING_DATASOURCE_USERNAME:airline_app}
+    password: ${SPRING_DATASOURCE_PASSWORD:AirlinePg1!55432}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: Europe/Moscow
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  flyway:
+    enabled: true
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+
+server:
+  port: ${APP_PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+app:
+  jwt:
+    secret-base64: ${JWT_SECRET_BASE64:lfWZpunFsHobrXIne2xOjuCBhV+r+2jognJ0wSuDAqs=}
+    issuer: ${JWT_ISSUER:airline-booking}
+    access-minutes: ${ACCESS_TOKEN_MINUTES:15}
+    refresh-days: ${REFRESH_TOKEN_DAYS:14}
+  bootstrap:
+    email: ${BOOTSTRAP_ADMIN_EMAIL:admin@airline.local}
+    name: ${BOOTSTRAP_ADMIN_NAME:Администратор}
+    password: ${BOOTSTRAP_ADMIN_PASSWORD:Adm1!Airline26}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8080}
+  security:
+    cookie-secure: ${COOKIE_SECURE:false}
+    permanent-delete-enabled: ${PERMANENT_DELETE_ENABLED:true}
+    max-failed-logins: 5
+    lock-minutes: 15
+    max-page-size: 100
